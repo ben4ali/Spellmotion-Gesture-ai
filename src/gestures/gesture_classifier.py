@@ -50,11 +50,9 @@ class GestureClassifier:
         if i==1 and m==1 and r==0 and p==0:
             return "VSign"
         
-        if t==1 and i==0 and m==0 and r==0 and p==0:
-            return "Thumbs Up"
-        
-        if t==1 and i==1 and m==0 and r==0 and p==0:
-            return "OK Sign"
+        if t==1 and i==0 and m==0 and r==0 and p==1:
+            return "RockOn"
+      
         
         return "Unknown"
 
