@@ -1,9 +1,16 @@
+import time
 import cv2
 from utils.camera import open_camera, read_frame, release_camera
 from detection.hand_detector import HandDetector
 from gestures.gesture_classifier import GestureClassifier
 
+current_gesture = None
+gesture_start_time = 0
+CONFIRMATION_DELAY = 1.5
+
 def main():
+    global current_gesture, gesture_start_time
+
     cap = open_camera(index=0, width=640, height=480)
     detector = HandDetector(max_hands=2)
     classifier = GestureClassifier(margin_px=20)
@@ -15,9 +22,21 @@ def main():
 
             if hands:
                 label, info = classifier.classify(hands[0], image_shape=frame.shape[:2])
-                text = f"{label} {info['fingers']}"
-                cv2.putText(annotated_frame, text, (10, 30),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
+                
+                now = time.time()
+                if label == current_gesture and current_gesture != "Unknown":
+                    if now - gesture_start_time >= CONFIRMATION_DELAY:
+                        display_text = f"{label} CONFIRMED"
+                    else:
+                        display_text = f"{label} (holding...)"
+                else:
+                    current_gesture = label
+                    gesture_start_time = now
+                    display_text = f"{label} (new)"
+                    
+                if current_gesture!="Unknown":
+                    cv2.putText(annotated_frame, display_text, (10, 30),
+                                cv2.FONT_HERSHEY_TRIPLEX, 1, (0,255,0), 2)
 
             cv2.imshow("Hand Gesture AI", annotated_frame)
             if cv2.waitKey(1) & 0xFF == 27:
