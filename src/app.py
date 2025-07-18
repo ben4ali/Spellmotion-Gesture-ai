@@ -4,6 +4,8 @@ from detection.hand_detector import HandDetector
 from gestures.gesture_classifier import GestureClassifier
 from gestures.gesture_manager import GestureManager
 from ui.ui_manager import UIManager
+from transfer.ws_server import WebSocketServer
+
 
 class HandGestureApp:
     def __init__(self):
@@ -26,6 +28,9 @@ class HandGestureApp:
             font_path="src/ressources/Pixel_Font.ttf",
             icon_path="src/ressources/sprites"
         )
+
+        self.ws_server = WebSocketServer()
+        self.ws_server.start()
     
     def initialize_camera(self, width: int = 640, height: int = 480, index: int = 0):
         self.camera = open_camera(index=index, width=width, height=height)
@@ -48,6 +53,9 @@ class HandGestureApp:
         
         if confirmed_spell:
             self.ui_manager.show_spell(confirmed_spell)
+            gesture_label = self.gesture_manager.current_gesture or "UNKNOWN"
+            print(f"[GestureApp] Sending spell via WebSocket: {confirmed_spell} (gesture={gesture_label})")
+            self.ws_server.send_spell(confirmed_spell, gesture_label)
         
         final_frame = self.ui_manager.render_frame(annotated_frame, display_text)
         return final_frame, gesture_status
